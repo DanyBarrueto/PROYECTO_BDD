@@ -1,0 +1,30 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `InsertarEstudiante`(
+    IN p_cedula VARCHAR(15),
+    IN p_nombres VARCHAR(50),
+    IN p_apellidos VARCHAR(50),
+    IN p_direccion_residencia VARCHAR(255),
+    IN p_latitud_residencia DECIMAL(9,6),
+    IN p_longitud_residencia DECIMAL(9,6),
+    IN p_direccion_trabajo VARCHAR(255),
+    IN p_latitud_trabajo DECIMAL(9,6),
+    IN p_longitud_trabajo DECIMAL(9,6)
+)
+BEGIN
+    INSERT INTO Estudiantes (
+        cedula,
+        nombres,
+        apellidos,
+        direccion_residencia,
+        ubicacion_residencia,
+        direccion_trabajo,
+        ubicacion_trabajo
+    ) VALUES (
+        p_cedula,
+        p_nombres,
+        p_apellidos,
+        p_direccion_residencia,
+        POINT(p_latitud_residencia, p_longitud_residencia),
+        p_direccion_trabajo,
+        POINT(p_latitud_trabajo, p_longitud_trabajo)
+    );
+END
