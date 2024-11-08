@@ -28,3 +28,24 @@ BEGIN
         POINT(p_latitud_trabajo, p_longitud_trabajo)
     );
 END
+
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `consultar`()
+BEGIN
+    SELECT 
+        id,
+        cedula,
+        nombres,
+        apellidos,
+        direccion_residencia,
+        ST_X(ubicacion_residencia) AS latitud_residencia,
+        ST_Y(ubicacion_residencia) AS longitud_residencia,
+        direccion_trabajo,
+        ST_X(ubicacion_trabajo) AS latitud_trabajo,
+        ST_Y(ubicacion_trabajo) AS longitud_trabajo,
+        ST_Distance_Sphere(ubicacion_residencia, ubicacion_trabajo) AS distancia_metros
+    FROM 
+        estudiantes
+    ORDER BY 
+        distancia_metros ASC;
+END

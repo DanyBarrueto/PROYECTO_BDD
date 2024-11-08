@@ -10,6 +10,70 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 </head>
 
+<?php
+$host = "localhost";
+$user = "root";
+$password = ""; 
+$dbname = "proyecto";
+
+// Crear conexión usando mysqli
+$conn = new mysqli($host, $user, $password, $dbname);
+
+// Verificar conexión
+if ($conn->connect_error) {
+    die("Error de conexión: " . $conn->connect_error);
+}
+
+// Inicializar $usuarios como un array vacío
+$usuarios = [];
+
+// Verificar si se envió el formulario
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Capturar los datos del formulario
+    $cedula = $_POST['cedula'];
+    $nombres = $_POST['nombres'];
+    $apellidos = $_POST['apellidos'];
+    $direccion_residencia = $_POST['direccion_residencia'];
+    $latitud_residencia = $_POST['latitude1'];
+    $longitud_residencia = $_POST['longitude1'];
+    $direccion_trabajo = $_POST['direccion_trabajo']; 
+    $latitud_trabajo = $_POST['latitude2'];
+    $longitud_trabajo = $_POST['longitude2'];
+
+    // Debug para verificar el valor de dirección de trabajo
+    echo "Direccion de trabajo recibida: " . $direccion_trabajo . "<br>";
+
+    // Preparar la llamada al procedimiento almacenado para insertar datos
+    $stmt = $conn->prepare("CALL InsertarEstudiante(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssddsdd", $cedula, $nombres, $apellidos, $direccion_residencia, $latitud_residencia, $longitud_residencia, $direccion_trabajo, $latitud_trabajo, $longitud_trabajo);
+
+    // Ejecutar y verificar la inserción
+    if ($stmt->execute()) {
+        echo "Datos guardados correctamente.";
+    } else {
+        echo "Error al guardar los datos: " . $stmt->error;
+    }
+
+    $stmt->close();
+}
+
+// Preparar la llamada al procedimiento almacenado para consultar datos
+if ($resultado = $conn->query("CALL consultar()")) {
+    // Verificar si se obtuvo algún resultado
+    if ($resultado->num_rows > 0) {
+        $usuarios = $resultado->fetch_all(MYSQLI_ASSOC);
+    } else {
+        echo "No se encontraron datos en la consulta.";
+    }
+    $resultado->close();
+} else {
+    echo "Error al ejecutar el procedimiento almacenado: " . $conn->error;
+}
+
+// Cerrar conexión
+$conn->close();
+?>
+
 <body class="bg-light">
     <div class="container py-4">
         <div class="row justify-content-center">
@@ -86,55 +150,65 @@
         </div>
     </div>
 
-    <?php
+    <!--pop op para consultar-->
 
-    $host = "localhost";
-    $user = "root";
-    $password = ""; 
-    $dbname = "proyecto";
-
-    // Crear conexión
-    $conn = new mysqli($host, $user, $password, $dbname);
-
-    // Verificar conexión
-    if ($conn->connect_error) {
-        die("Error de conexión: " . $conn->connect_error);
-    }
-
-    // Verificar si se envió el formulario
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        // Capturar los datos del formulario
-        $cedula = $_POST['cedula'];
-        $nombres = $_POST['nombres'];
-        $apellidos = $_POST['apellidos'];
-        $direccion_residencia = $_POST['direccion_residencia'];
-        $latitud_residencia = $_POST['latitude1'];
-        $longitud_residencia = $_POST['longitude1'];
-        $direccion_trabajo = $_POST['direccion_trabajo']; 
-        $latitud_trabajo = $_POST['latitude2'];
-        $longitud_trabajo = $_POST['longitude2'];
+<div class="container text-center">
     
-        // Agrega un debug para ver qué está llegando
-        echo "Direccion de trabajo recibida: " . $direccion_trabajo . "<br>";
+    <button class="btn btn-success w-15" data-bs-toggle="modal" data-bs-target="#userModal">
+    Ver Datos de Usuarios
+    </button>
 
-        // Preparar la llamada al procedimiento almacenado
-        $stmt = $conn->prepare("CALL InsertarEstudiante(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssddddd", $cedula, $nombres, $apellidos, $direccion_residencia, $latitud_residencia, $longitud_residencia, $direccion_trabajo, $latitud_trabajo, $longitud_trabajo);
+    <!-- Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalLabel">Datos de Usuarios</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive" style="max-height: 70vh;">
+                        <table class="table table-dark table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Cédula</th>
+                                    <th>Nombres</th>
+                                    <th>Apellidos</th>
+                                    <th>Dirección Residencia</th>
+                                    <th>Latitud Residencia</th>
+                                    <th>Longitud Residencia</th>
+                                    <th>Dirección Trabajo</th>
+                                    <th>Latitud Trabajo</th>
+                                    <th>Longitud Trabajo</th>
+                                    <th>Distancia (km)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($usuarios as $usuario): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($usuario['cedula']); ?></td>
+                                    <td><?= htmlspecialchars($usuario['nombres']); ?></td>
+                                    <td><?= htmlspecialchars($usuario['apellidos']); ?></td>
+                                    <td><?= htmlspecialchars($usuario['direccion_residencia']); ?></td>
+                                    <td><?= htmlspecialchars($usuario['latitud_residencia']); ?></td>
+                                    <td><?= htmlspecialchars($usuario['longitud_residencia']); ?></td>
+                                    <td><?= htmlspecialchars($usuario['direccion_trabajo']); ?></td>
+                                    <td><?= htmlspecialchars($usuario['latitud_trabajo']); ?></td>
+                                    <td><?= htmlspecialchars($usuario['longitud_trabajo']); ?></td>
+                                    <td><?= round($usuario['distancia_metros'] / 1000, 2); // Convertir a km ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        // Ejecutar y verificar la inserción
-        if ($stmt->execute()) {
-            echo "Datos guardados correctamente.";
-        } else {
-            echo "Error al guardar los datos: " . $stmt->error;
-        }
+</div>
 
-        
-        $stmt->close();
-    }
-
-    
-    $conn->close();
-    ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
