@@ -136,6 +136,11 @@ $conn->close();
 
                         <button type="submit" class="btn btn-primary w-100">Guardar Usuario</button>
                     </form>
+                    <br>
+                    <button class="btn btn-success w-15" data-bs-toggle="modal" data-bs-target="#userModal">
+                    Ver Datos de Usuarios
+                    </button>
+
                 </div>
             </div>
 
@@ -154,9 +159,7 @@ $conn->close();
 
 <div class="container text-center">
     
-    <button class="btn btn-success w-15" data-bs-toggle="modal" data-bs-target="#userModal">
-    Ver Datos de Usuarios
-    </button>
+    
 
     <!-- Modal -->
     <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
